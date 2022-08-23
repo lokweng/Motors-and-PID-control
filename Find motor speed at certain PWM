@@ -1,0 +1,64 @@
+// Pins  
+int Echo = 7;  
+int trig = 6;  
+int enA = 5;  
+int enB = 3;  
+const int in1 = 13;  
+const int in2 = 12;  
+const int in3 = 11;  
+const int in4 = 10;  
+unsigned long currentTime, previousTime; 
+double elapsedTime;  
+double Speed; 
+float Ceni, Ceni_prev;  
+int pulse, Ceni=0; 
+
+void setup() {  
+  Serial.begin(9600);  
+  pinMode(Echo, INPUT);  
+  pinMode(trig, OUTPUT);  
+  pinMode(in1, OUTPUT);  
+  pinMode(in2, OUTPUT);  
+  pinMode(in3, OUTPUT);  
+  pinMode(in4, OUTPUT);  
+  pinMode(enB, OUTPUT);  
+  pinMode(enA, OUTPUT);  
+}  
+
+void loop() { 
+  //Indent on Serial monitor 
+  String INDENT = "\033"; 
+
+  // Calculate distance and time  
+  digitalWrite(trig, LOW); //clear trig pin  
+  delayMicroseconds(20);  
+  digitalWrite(trig, HIGH);  
+  delayMicroseconds(100);  
+  digitalWrite(trig, LOW);  
+
+  pulse = pulseIn(Echo, HIGH);//time in microseconds 
+  Ceni_prev=Ceni;  
+  Ceni = pulse / 29.387 / 2/100; //current distance in m 
+
+delay(1000); 
+  currentTime = millis(); 
+  elapsedTime=(currentTime-previousTime)/1000; //time in seconds 
+  previousTime=currentTime; 
+  Speed = (Ceni-Ceni_prev)/elapsedTime; 
+
+  Serial.print(INDENT);  
+  Serial.print("Distance: ");  
+  Serial.println(Ceni-Ceni_prev);  
+  Serial.print("Time: "); 
+  Serial.println(elapsedTime); 
+  Serial.print("Speed: "); 
+  Serial.println(Speed); 
+
+  digitalWrite(in1, LOW);  
+  digitalWrite(in2, HIGH);  
+  digitalWrite(in3, LOW);  
+  digitalWrite(in4, HIGH); 
+
+  analogWrite(enA, 230); 
+  analogWrite(enB, 230); 
+} 
