@@ -1,0 +1,67 @@
+// Pin names 
+const int encoderA=2;  
+const int encoderB=3;  
+const int ENB=5; 
+const int IN3=6;  
+const int IN4=7; 
+const int jPin=0; 
+
+// Variables 
+int jVal, neutral=494; //Edit neutral accordingly  
+int pwr,dir; //Speed and direction of motor   
+
+void setup(){  
+  Serial.begin(9600); //Receives data to be output to Serial Monitor 
+
+//Specify pins as input or output 
+  pinMode(encoderA,INPUT);  
+  pinMode(encoderB,INPUT);  
+  pinMode(ENB,OUTPUT);  
+  pinMode(IN3,OUTPUT);  
+  pinMode(IN4,OUTPUT); 
+  pinMode(jPin,INPUT);  
+}  
+
+void loop(){  
+  //Read joystick position. This will be a value from 0 to 1023 
+  jVal= analogRead(jPin); 
+  Serial.print("Joystick Position: "); 
+  Serial.println(jVal); //print position value to Serial monitor 
+
+  //Use joystick position to calculate motor speed and direction.  
+  //Speed value is between 0 and 255 
+  if (jVal==neutral){ 
+    pwr=0; 
+  } 
+  else if (jVal<495){ 
+    jVal=map(jVal,0,neutral,-255,0); 
+    pwr=abs(jVal); 
+    dir=-1; 
+  } 
+  else{ 
+    jVal=map(jVal,neutral,1023,0,255); 
+    pwr=abs(jVal); 
+    dir=1; 
+  } 
+
+  Serial.print("Motor speed: "); 
+  Serial.println(pwr); //Print speed value to Serial Monitor 
+  setMotor(dir,pwr,ENB,IN3,IN4);// calls the function "setMotor" 
+}  
+
+// Function that sets motor speed and direction  
+void setMotor(int dir, int pwr, int ENB, int IN3, int IN4){  
+  analogWrite(ENB,pwr); 
+  if(dir==1){  
+    digitalWrite(IN3,HIGH);  
+    digitalWrite(IN4,LOW);  
+  }  
+  else if(dir==-1){  
+    digitalWrite(IN3,LOW);  
+    digitalWrite(IN4,HIGH);  
+  }  
+  else{ 
+    digitalWrite(IN3,LOW);  
+    digitalWrite(IN4,LOW);  
+  } 
+} 
