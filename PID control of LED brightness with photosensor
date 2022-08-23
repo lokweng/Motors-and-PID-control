@@ -1,0 +1,30 @@
+//Use the photosensor to check the ambient light and LED light
+//Make the setpoint between these values
+
+// Variables
+float Kp=0.1, Ki=0, Kd=0; 
+float error=0, previous_error=0; 
+float P=0, I=0,D=0; 
+float PID_value=0; 
+int setPoint=860; 
+float initialValue=10; 
+
+void setup(){ 
+  pinMode(3,OUTPUT); 
+  analogWrite(3,initialValue); 
+  Serial.begin(9600); 
+} 
+
+void loop(){ 
+  int photoSignal=analogRead(A0); 
+  error=setPoint-photoSignal; 
+  P=error; 
+  I+=error; 
+  D=error-previous_error; 
+  previous_error=error; 
+  PID_value=PID_value+Kp*P+Ki*I+Kd*D; 
+  analogWrite(3,PID_value); 
+  Serial.print(setPoint); 
+  Serial.print(" "); 
+  Serial.println(photoSignal); 
+} 
