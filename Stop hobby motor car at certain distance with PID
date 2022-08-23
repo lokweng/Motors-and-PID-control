@@ -1,0 +1,121 @@
+// Pins  
+int Echo = 7;  
+int trig = 6;  
+int enA = 5;  
+int enB = 3;  
+const int in1 = 13;  
+const int in2 = 12;  
+const int in3 = 11;  
+const int in4 = 10;  
+
+// PID variables  
+float Kp=1, Ki=0.01, Kd=0;  
+float error=0, previous_error=0;  
+float P=0, I=0, D=0;  
+float PID_value=0;  
+float setPoint=0.1; //setpoint is 0.1m from sensor  
+int pwm; 
+unsigned long currentTime, previousTime; 
+double elapsedTime;  
+
+void setup() {  
+  Serial.begin(9600);  
+  pinMode(Echo, INPUT);  
+  pinMode(trig, OUTPUT);  
+  pinMode(in1, OUTPUT);  
+  pinMode(in2, OUTPUT);  
+  pinMode(in3, OUTPUT);  
+  pinMode(in4, OUTPUT);  
+  pinMode(enB, OUTPUT);  
+  pinMode(enA, OUTPUT);  
+}  
+
+void loop() { 
+  //Indent on Serial monitor 
+  String INDENT = "\033"; 
+
+  // Calculate distance and time  
+  float Ceni; 
+  float distance;  
+  int pulse; 
+
+  digitalWrite(trig, LOW); //clear trig pin  
+  delayMicroseconds(20);  
+  digitalWrite(trig, HIGH);  
+  delayMicroseconds(100);  
+  digitalWrite(trig, LOW);  
+
+  pulse = pulseIn(Echo, HIGH);//time in microseconds  
+  Ceni = pulse / 29.387 / 2; //current distance in cm 
+  distance = Ceni/100; //current distance in m  
+  
+delay(1000); 
+  currentTime = millis(); 
+  elapsedTime=(currentTime-previousTime)/1000; //elapsed time in seconds 
+  previousTime=currentTime; 
+
+  Serial.print(INDENT);  
+  Serial.print("Distance, cm: ");  
+  Serial.println(Ceni);  
+
+  // PID calculation  
+  error=distance-setPoint;  
+  P=error;  
+  I+=error*elapsedTime;  
+  D=(error-previous_error)/elapsedTime;  
+  previous_error=error;  
+  PID_value=Kp*P+Ki*I+Kd*D; // velocity needed to travel in m/s 
+
+  Serial.print("PID_value: ");  
+  Serial.println(PID_value); 
+
+  // Set direction of motors using sign of PID_value 
+  if(PID_value>0){ 
+    digitalWrite(in1, LOW);  
+    digitalWrite(in2, HIGH);  
+    digitalWrite(in3, LOW);  
+    digitalWrite(in4, HIGH); 
+    Serial.println("Forwards"); 
+  } 
+
+  else if(PID_value<0){  
+    digitalWrite(in1, HIGH);  
+    digitalWrite(in2, LOW);  
+    digitalWrite(in3, HIGH);  
+    digitalWrite(in4, LOW); 
+    Serial.println("Backwards"); 
+  } 
+
+  else{ 
+    digitalWrite(in1, LOW);  
+    digitalWrite(in2, LOW);  
+    digitalWrite(in3, LOW);  
+    digitalWrite(in4, LOW); 
+    Serial.println("Destination reached"); 
+  } 
+
+  PID_value=abs(PID_value);//positive value for pwm 
+  PID_value=PID_value*100;//speed in cm/s  
+
+  // Set speed of motors   
+  if(PID_value>200){ 
+    pwm=255; 
+  } 
+
+  //convert speed to pwm assuming motor travels at 2m/s at 255 and 0m/s at 110 
+  else if(PID_value>180){ 
+    pwm=map(PID_value,20,50,180,255); //20-50,230-255 
+  } 
+  else if(PID_value>100){ 
+    pwm=map(PID_value,10,20,160,230); //10-20,160-230 
+  } 
+  else{ 
+    pwm=map(PID_value,0,50,110,160); 
+  } 
+
+  Serial.print("PWM: ");  
+  Serial.println(pwm);  
+
+  analogWrite(enA, pwm); 
+  analogWrite(enB, pwm);  
+  } 
