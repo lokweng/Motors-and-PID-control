@@ -33,7 +33,7 @@ void loop(){
   if (jVal==neutral){ 
     pwr=0; 
   } 
-  else if (jVal<495){ 
+  else if (jVal<neutral){ 
     jVal=map(jVal,0,neutral,-255,0); 
     pwr=abs(jVal); 
     dir=-1; 
